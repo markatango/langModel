@@ -1,0 +1,109 @@
+
+# Davies, Mark. (2011) N-grams data from the Corpus of Contemporary American English (COCA). Downloaded from http://www.ngrams.info on April 7, 2015. 
+
+dirOrigName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US'
+dirCleanName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US_clean'
+dirSampName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US_sample'
+
+# Get the lower case full data initially, clean, one line per sentence
+if (STARTUP & !READDATA){
+  fileNames <- system(paste("dir ", dirOrigName),intern=TRUE)
+  fileList <- strsplit(fileNames, "\\s+")[[1]]
+  
+  texts <- lapply(fileList, readAndLower, dirOrigName)
+  if (SAMPLESIZE < 1.0){
+      nTexts <- sapply(texts,length)
+      set.seed(1340)
+      texts <- lapply(1:length(texts),function(i){
+        texts[[i]][sample(1:nTexts[i], SAMPLESIZE * nTexts[i])]
+      })
+  }
+
+  # delay cleaning until sample is selected (cleaning is slow)
+  texts <- lapply(texts,cleanText)
+  nTexts <- sapply(texts,function(t)length(t))
+  nDocs <- length(nTexts)
+  docNames <- fileList
+  removeFiles(dirCleanName)
+  writeSamples(texts,dirCleanName)
+  save.image()
+}
+
+if (STARTUP & READDATA){
+  # If already present just read in here to sample
+  fileNames <- system(paste("dir ", dirCleanName),intern=TRUE)
+  fileList <- strsplit(fileNames, "\\s+")[[1]]
+  fullFileNames <- paste(dirCleanName,"/",fileList,sep="")
+  
+  texts <- lapply(fullFileNames, readLines)
+  nTexts <- sapply(texts,function(t)length(t))
+  nDocs <- length(nTexts)
+  docNames <- fileList
+  
+  save.image()
+}
+
+
+####################  START HERE #################################
+SAMPLESIZE <- 0.2
+if (SAMPLEDATA){
+  set.seed(1340)
+  sampTexts <- lapply(1:length(texts),function(i){
+    texts[[i]][sample(1:nTexts[i], SAMPLESIZE * nTexts[i])]
+  })
+  
+  removeFiles(dirSampName)
+  
+  writeSamples(sampTexts,dirSampName)
+  
+  rm(texts,sampTexts)
+  gc()
+  
+  dCorpus <- Corpus(DirSource(dirSampName))
+}
+
+if (MAKENGRAMS){
+  mainTokenizer <- lapply(1:NMAX,function(i) ngram_tokenizer(i))
+  
+  NGramify <- function(tokens){
+    tab <- table(tokens) 
+    u <- tab < FILTERTHRESHOLD
+    tok <- names(tab[!u])
+    data.frame(tokens=tok, count=tab[!u], stringsAsFactors=FALSE) # i and t are recycled
+  }
+  
+  getTokens <- function(i,t){
+    tok <- mainTokenizer[[i]](content(dCorpus[[t]]))
+    NGs <- NGramify(tok)
+    NGs$N <- i
+    NGs$doc <- t # i and t are recycled
+    NGs
+  }
+  
+  tokens <- lapply(1:nDocs,
+                   function(t) lapply(1:NMAX, 
+                                      function(i) getTokens(i,t)
+                   )
+  )
+  
+  Ngrams <- foreach(b=iter(tokens),.combine="rbind") %do% {
+    foreach(c=iter(b),.combine="rbind") %do% c
+  }
+  
+  Ngrams$pref <- exPrefix(Ngrams$tokens)
+  Ngrams$suff <- exSuffix(Ngrams$tokens)
+  
+  Ngrams <- Ngrams[,-which(names(Ngrams)=="tokens")]
+  Ngrams <- Ngrams[order(Ngrams$count,decreasing=TRUE),]
+  Ngrams <- Ngrams[order(Ngrams$N),]
+  Ngrams <- Ngrams[order(Ngrams$doc),]
+  Ngrams$n <- 1:dim(Ngrams)[1]
+  
+  NgramDocStats <- dcast(Ngrams, pref+suff~doc,value.var="count",sum)
+  NgramDocStats$total <- rowSums(NgramDocStats[,c(as.character(1:nDocs))], na.rm=TRUE)
+  
+  save.image("1__0_2.RData")
+}
+
+
+      

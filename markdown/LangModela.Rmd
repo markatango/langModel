@@ -1,0 +1,200 @@
+---
+title: "Text Prediction Using R"
+author: "Mark Rodighiero"
+date: "Saturday, March 28, 2015"
+output: html_document
+---
+### Scope
+This document presents the current status of the text prediction project. Some basic statistics and observations about the source documents are included, as well as some analysis of N-gram tokenization, and thoughts about how to handle certain language constructs such as money, dates, and URLs. An outline of the prediction method and its implementation is presented, along with a list of the next steps to be taken for this project.
+
+### Source documents
+This project uses the english source documents found at: [Capstone Dataset](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip). 
+
+* en_US.blogs.txt
+* en_US.news.txt
+* en_US.twitter.txt
+
+The file statistics are shown in the following table:
+
+
+| Document           | # Lines   | max Line length | # Words    | # Characters | ave # char / wd | ave # wd / ln | 
+|:------------------ | ---------:| ---------------:| ----------:| ------------:| ---------------:| -------------:| 
+| en_US.blogs.txt    |   899,288 |          40,832 | 37,272,578 |  210,160,014 |             5.6 |        44.4   |
+| en_US.news.txt     | 1,010,243 |          11,384 | 34,309,641 |  205,811,886 |             6.0 |        34.0   |
+| en_US.twitter.txt  | 2,360,148 |             140 | 30,341,028 |  167,105,338 |             5.5 |        12.9   |
+
+The twitter data requires that tweets be no longer than 140 characters, as shown. What surprised me was that the average number of characters per word for tweets is similar to that of the other sources.  I would have expected a much larger use of abbreviations; on the other hand, abbreviations are not much shorter that 4-5 letters anyway, so the effect is small.
+
+### Sampling
+The documents in the corpus were sampled for the purpose of exploration to reduce processing time.  A random sample of 8000 lines was taken from each of the three documents, and a smaller version of the original corpus was constructed from the sampled files. The sampling code is shown here for one of the files:
+
+```
+dirName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US'
+blog <- readLines(paste0(dirName,"/en_US.blogs.txt"),skipNul=TRUE,encoding='latin1')
+nb <- length(blog)
+sampleSize <- 8000
+set.seed(1340)
+sblog <- blog[sample(1:nb,sampleSize)]
+writeLines(sblog,"D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US_sample/en_US.blog.sample.txt")
+
+```
+
+and the smaller corpus formed from the sampled files as shown:
+
+```
+dirName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US_sample'
+dCorpus <- Corpus(DirSource(dirName))
+```
+
+### Data cleanup
+The raw files include special sequences that can be identified as dates, times, money, email addresses, and web URLs. Also, the text includes various numbers with other various significances, impolite words, punctuation marks. Finally, there are a lot of filler words such as articles ("a", "an", "the"), certain modifiers, prepositions, and pronouns that carry little information. These are called "stop words". We consider these here:
+
+#### Dates, times, money, email, and web URLS
+We consider these elements as "generic" with little specific predictive value. That is, it is conceivable that a date, for instance, could likely follow a phrase (e.g., "I start work at", "8 am"), but it is not clear that "8 am" should be preferred to, say, "9 am".  So while perhaps a phrase may anticipate a time, it is less likely that the phrase would anticipate a *specific* time. So all times were encoded as "\<time\>". The same argument could be made for "dates", "money", "email" and "websites".  So these were identified using regular expressions and tokenized as "\<date\>", "\<money\>", "\<email\>", and "\<URL\>".    
+
+It remains to be seen if this strategy is a good idea. This will be explored more fully when the prediction algorithms are tested.
+
+#### Other numbers
+All other numbers were eliminated after the dates, times, money, email, and websites were encoded, per above.
+
+#### Impolite words.
+A list of "badwords" was obtained from [here](http://www.cs.cmu.edu/~biglou/resources/bad-words.txt). The list contains a lot of words (e.g., "arab") that one wouldn't consider impolite, but we used the whole long list rather than try to arbitrate every entry.
+
+#### Punctuation
+We identified three classes of punctuation based on their impact on prediction: "Thought-stopping" punctuation are marks in the set {:;.?!}; "apostrophes", which have several uses; and all other marks not in these sets. "Thought-stopping" punctuation marks terminate one complete sentence. The idea here is that a period ending one thought (sentence) lessens the likelihood that the final word in that sentence could predict the beginning word of the following sentence. There is no continuity of sentence structure across any of these punctuation marks.  So these were left in the documents during this phase of data exploration and cleanup, to be dealt with in the prediction algorithms.
+
+Apostrophes "'" can indicate contractions, quotes, or possessive forms of words. The following contractions were identified and expanded, thereby eliminating apostrophes used for this purpose:
+
+
+| Contraction | Expansion |
+| -----------:| ---------:|
+|   \'ll       |    will   |
+|   \'d        |    would  | 
+|    n\'t      |     not   |
+|   \'re      |    are    |
+|    \'m       |     am    |
+|    n\'       |    and    |
+
+
+Of course, some of these expansions were arbitrary (for example "'d" might be more appropriately expanded as "had" in some cases).  But for now that will be one of several compromises made in this project to be improved upon later.
+
+Apostrophes used as quotations were eliminated entirely. Again, this was an arbitrary decision; one could argue that the beginning of a quote is similar to a "thought-ending" punctuation. And again, another compromise to deal with later on.
+
+Apostrophes used in a possessive form were eliminated.  Hyphens between words were converted to spaces, and all other punctuation marks were eliminated.
+
+
+### Tokenization
+
+The modified corpus was then tokenized into 1-gram to 6-gram tokens for the purpose of exploring language structure.  The code used to create the n-grams is:
+
+```
+Tokenizer <- function(min, max){ 
+  function(x) NGramTokenizer(x, Weka_control(min = min, max = max))
+}
+dTDM <- TermDocumentMatrix(dCorpus, control=list(tokenize=Tokenizer(1,6)))
+```
+
+Given a set of k unique 1-gram tokens (words), consider the expected number of unique n-gram tokens (phrases of n words). For example, a 2-gram is constructed by prepending or appending one 1-gram to another 1-gram. In general, an n+1-gram token is formed by prepending or appending a 1-gram to an n-gram.  If n+1-gram tokens were constructed by all combinations of n-grams and 1-grams in this manner, then the theoretical number of n-gram tokens would be on the order of O(k^n^). But this is not the case. The actual number of unique n-grams in the sample documents as a function of n are shown in figure 1, below.  The structure of the language must be imposing some restrictions on the formation of an n+1 gram from an n-gram.  That is, only a small subset of 1-grams are likely to prepend or append a given n-gram, and as n gets larger, the size of the subset gets smaller. 
+
+The number of n-grams as a function of n is also given in this table, and compared with the (unstructured) theoretical maximum number of n-grams, given k 1-grams.
+
+  
+| n | No. of n-grams | Max possible number of n-grams |
+| -:| --------------:| ------------------------------:|
+| 1 |        41027   |                41027           |
+| 2 |     327605     |         1.7 x 10^9^            |
+| 3 |     372177     |        6.9 x 10^13^            |
+| 4 |    355584      |      2.8 x 10^18^              |
+| 5 |      335065    |     1.2 x 10^23^               |
+| 6 |       315413   |      4.8 x 10^27^              |
+
+
+We should remember that these statistics are taken from an analysis of a relatively small sample of the source documents.  Later, we will explore the impact of larger subsets while evaluating the performance of the prediction algorithms.  
+
+#### Word frequency
+N-gram frequency is illustrated in figure 2.  Here, we grouped the tokens by n-value (ie. 1-grams, 2-grams, etc), then sorted on frequency in decreasing order.  Code is here:
+
+```
+Terms <- Terms(dTDM)
+Ngrams <- data.frame(terms=Terms,
+                N=sapply(Terms,function(t)length(unlist(strsplit(t," ")))),
+                count=row_sums(dTDM),
+                stringsAsFactors=FALSE
+)
+
+Ngrams <- Ngrams[order(Ngrams$count,decreasing=TRUE),]
+Ngrams <- Ngrams[order(Ngrams$N),]
+```
+
+Sequential index numbers were added to the data, which were then plotted in figure 2.  Code is here:
+
+```
+Ngrams$ind <- 1:dim(Ngrams)[1]
+
+NgramCounts <- sapply(1:Nmax,function(n)sum((Ngrams$N==n)*1))
+NgramCounts.df <- data.frame(N=1:Nmax,counts=NgramCounts)
+
+palette(rainbow(Nmax))
+g <- ggplot(Ngrams,aes(x=ind,y=count,group=N))
+g <- g+geom_point(shape=21,aes(color=factor(N)))+scale_y_continuous(trans="log10") 
+g <- g+guides(color=guide_legend("N")) + ggtitle("Distribution of N-gram counts")
+g
+```
+
+Figure 2 shows that the percentage of n-grams that have only one occurance increases with n. Again, this data is from our sampled source documents, but since the sampling was uniform we expect a similar pattern to prevail.  Figure 3 shows detail for just 1-gram tokens.
+
+### Prediction
+We can look at two differenct prediction scenarios:  predicting the next word in a phrase, given a short sequence of words; and predicting the next letter in a word, given a short sequence of letters.
+
+#### Predicting the next word in a phrase
+Suppose we are given a word that matches the first word in some of our 2-grams. We then select all 2-grams beginning with that word, and count the number of occurrances of 2-grams for each of their unique last words. The last word in the set of 2-grams with the highest count is therefore the most likely word to follow and is selected.  For example, suppose the given word is "shop" and the available 2-grams starting with the word "shop" are:
+
+| n-gram | No. of occurances in the source documents |
+|:------ |:------|
+|"shop store"  | 6 |
+|"shop supermarket" | 2 |
+| "shop mall" | 4 |
+
+We would then suggest "store" as the most likely word to follow the word "shop". Suppose further there are many 2-grams starting with our given word. In the interest in economy we would perhaps consider only the 2-grams with the three highest counts in the source documents. In the case of ties we could either select one of the candidate predicts randomly, or suggest both.
+
+This method can be generalized to the case where a phrase of 2 or more words is given.  Consider the first n-1 words in an n-gram as a "prefix" and the final word as a "suffix". Then our prediction method is to match a given n-1-word phrase to the prefixes in our set of n-grams, and then suggest the suffix of the n-gram with the highest occurance count as the next word.
+
+But as was seen above, the number of n-grams becomes more and more sparse as n increases, compared with the total number of possible combinations of n words. This means that it becomes less and less likely that a given n-1 word phase will match a prefix of an n-gram. In this case, we "back off" and try the last n-2 words of the given phrase and try to match a prefix of our n-1-grams. We continue in this manner until we find a match or until we reach our 1-grams. In the case a given single word matches none of our 1-grams, then our only choice is to suggest nothing or to suggest the most common 1-gram (word) that occurs in our document.  Statistically, that would be the most likely word to occur, although it would not likely be perceived as an appropriate choice.
+
+#### Predicting a word given a short sequence of letters
+This scenario is approached in the same way as the word prediction scenario. Here, we take our 1-grams and split each into prefixes and suffixes along character boundaries. So one m-character word turns into m-1 2-grams. As letters are entered, we compare the growing sequence of letters to the prefixes of our "new" 2-grams and proceed as above, selecting the corresponding 2-gram with the highest number of occurances in our corpus.
+
+
+### Outline of next steps
+* Split n-grams into n-1-gram prefixes and 1-gram suffixes
+* Estimate storage requirements
+* Implement a fast way to search n-1-gram prefixes for a give n-1 word input phrase (using the hash library)
+* Evaluate prediction method using N-fold cross-validation, varying size of token database
+* Balance storage requirements, search speed, and prediction accuracy
+* Select final model and prediction method
+* Develop user interface and shiny application
+* Develop presentation
+
+
+
+*************
+### Figures
+
+![Number_of_ngrams][1]
+
+Figure 1: The number of n-grams as a function of n is much lower for 3-grams and up compared with the O(k^n^), where k is the number of 1-grams
+
+![Dist of n-grams][2]
+
+Figure 2: Frequency distribution of n-grams
+
+![Dist of 1-grams][3]
+
+Figure 3: Frequency distribution of 1-grams
+
+
+[1]: ..\figs\Number_of_N_grams_vs_N.png "Figure 1: The number of n-grams as a function of n is much lower for 3-grams and up compared with the O(k^n^), where k is the number of 1-grams"
+[2]: ..\figs\Distribution_of_N-gram_counts.png "Figure 2: Frequency distribution of n-grams"
+[3]: ..\figs\Distribution_of_uni-gram_counts.png "Figure 3: Frequency distribution of 1-grams"
+
+
