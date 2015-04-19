@@ -25,7 +25,7 @@ if(.Platform$OS.type == "unix") {
   source("rSource\\clean.R")
 }
 
-if(!exists("NgramDocStats")) load("1__0_2.RData")
+if(!exists("NgramDocStats")) load(".RData")
 docNames <- fileList
 nDocs <- length(fileList)
 
