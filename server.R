@@ -9,7 +9,7 @@ load("predictors.RData")
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
   
-  s1 <- reactive({predictFromText(input$text)})
+  s1 <- reactive({predictFromTextSmall(input$text)})
   lens <- reactive({length(s1()$tdl)})
   output$lens <- renderText(lens())
   

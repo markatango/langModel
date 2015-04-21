@@ -62,12 +62,12 @@ getCandidateNgrams <- function(text,ngramSet){
 }
      
 # # #NOT RUN
-text <- "give me some"
-
-text
-getCandidateNgrams(text,NgramDocStats)
-noText <- 'fasaoer09'
-noText
-isempty(getCandidateNgrams(noText,Ngrams))
+# text <- "give me some"
+# 
+# text
+# getCandidateNgrams(text,NgramDocStats)
+# noText <- 'fasaoer09'
+# noText
+# isempty(getCandidateNgrams(noText,Ngrams))
 
 # # # ##end NOT RUN

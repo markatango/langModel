@@ -1,7 +1,11 @@
 library(caret)
 # work owith tokens
 
-predictFromText <- function(text){
+# predictFromNgrams <- function(ngramSet){
+#   predictFromTextFull <- function(text)
+# }
+
+predictFromTextLarge <- function(text){
   candidates <- getCandidateNgrams(text,NgramDocStats)
   if(!isempty(candidates)){
     candidates <- candidates[order(candidates$pt,decreasing=TRUE),]
@@ -22,6 +26,35 @@ predictFromText <- function(text){
   topOverAllList <- if(!isempty(candidates)){ topOverAllList } else { '' }
   list(adNgrams=candidates, uSAD=topOverAllList, tdl=topDocsList, totalNumPred=dim(candidates)[1])
 }
+
+predictFromTextSmall <- function(text){
+  candidates <- getCandidateNgrams(text,sNDS)
+  if(!isempty(candidates)){
+    candidates <- candidates[order(candidates$pt,decreasing=TRUE),]
+    n <- min(RPTLEN, length(candidates$suff))
+    topOverAllList <- candidates$suff[1:n]
+    topDocsList <- lapply(1:nDocs, function(d){
+      include <- candidates[paste0("p",d)]>0
+      ci <- candidates[include,]
+      ci$suff[order(ci[paste0("p",d)], decreasing=TRUE)]
+    })
+  }
+  
+  candidates <- if(!isempty(candidates)) { candidates } else { data.frame() }
+  topDocsList <- if(!isempty(candidates)){ topDocsList } else { list('','','') }
+  
+  
+  
+  topOverAllList <- if(!isempty(candidates)){ topOverAllList } else { '' }
+  list(adNgrams=candidates, uSAD=topOverAllList, tdl=topDocsList, totalNumPred=dim(candidates)[1])
+}
+
+predictFromTextd <- function(text){
+  if(!exists("sNDS")) load("shortNDS.RData")
+  if(!exists("dNDS")) load("predictors.RData")
+  dNDS[which(dNDS$pref==text)]
+}
+
 
 mostLikelyNWords <- function(N,stWd){
   temp <- stWd
