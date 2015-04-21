@@ -98,11 +98,31 @@ if (MAKENGRAMS){
   Ngrams <- Ngrams[order(Ngrams$N),]
   Ngrams <- Ngrams[order(Ngrams$doc),]
   Ngrams$n <- 1:dim(Ngrams)[1]
+  Ngrams <- Ngrams[which(Ngrams$suff!=""),]
   
   NgramDocStats <- dcast(Ngrams, pref+suff~doc,value.var="count",sum)
   NgramDocStats$total <- rowSums(NgramDocStats[,c(as.character(1:nDocs))], na.rm=TRUE)
+  NgramDocStats <- NgramDocStats[which(NgramDocStats$suff!=""),]
+  NgramDocStats <- NgramDocStats[order(NgramDocStats$pref, -NgramDocStats$total),]
   
-  save.image("1__0_2.RData")
+  subber <- function(n){
+    function(df) df[1:min(n,dim(df)[1]),]
+  }
+  sub5 <- subber(5)
+  sub15 <- subber(15)
+  
+  sNDS <- ddply(NgramDocStats, .(pref), sub5)
+  dNDS <- sNDS[,c("pref","suff")]
+
+  probs <- ddply(NgramDocStats, .(pref), mutate,
+                 p1 = 1/sum(1),
+                 p2 = 2/sum(2),
+                 p3 = 3/sum(3))
+  
+  save.image(".RData")
+  save(sNDS,file="shortNDS.RData")
+  save(dNDS,file="predictors.RData")
+  
 }
 
 

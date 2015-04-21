@@ -101,7 +101,7 @@ plotAll <- function(inCand){
 # topOverAllList
 
 
-sapply(1:3, function(i) {  sum(is.na(inCand$tdl[[i]])*1)==0  })
+# sapply(1:3, function(i) {  sum(is.na(inCand$tdl[[i]])*1)==0  })
 
 
 

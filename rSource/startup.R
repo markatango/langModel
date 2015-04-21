@@ -8,6 +8,7 @@ library(stringi)
 library(foreach)
 library(iterators)
 library(shiny)
+library(plyr)
 
 DEBUGMODE <- FALSE
 STARTUP <- FALSE
