@@ -9,6 +9,7 @@ library(foreach)
 library(iterators)
 library(shiny)
 library(plyr)
+library(caret)
 
 DEBUGMODE <- FALSE
 STARTUP <- FALSE
@@ -26,9 +27,9 @@ if(.Platform$OS.type == "unix") {
   source("rSource\\clean.R")
 }
 
-if(!exists("NgramDocStats")) load(".RData")
-docNames <- fileList
-nDocs <- length(fileList)
+if(!exists("sNDS")) load("shortNDS.RData")
+#docNames <- fileList
+#nDocs <- length(fileList)
 
 if(.Platform$OS.type == "unix") {
 

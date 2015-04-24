@@ -8,7 +8,7 @@ gc()
 
 n <- 1
 NFOLD <- 5
-samplesSizes <- c(0.2,0.1,0.05,0.025,0.0125)
+samplesSizes <- c(0.05,0.025,0.0125,0.00625)
 for(j in sampleSizes){
   for(i in 1:NFOLD){
     

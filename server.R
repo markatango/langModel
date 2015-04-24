@@ -3,8 +3,6 @@ if(.Platform$OS.type == "unix") {
 } else {
   source("rSource\\startup.R",echo=TRUE, verbose=FALSE)
 }
-load("shortNDS.RData")
-load("predictors.RData")
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {

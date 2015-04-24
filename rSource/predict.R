@@ -1,53 +1,30 @@
-library(caret)
+
+
 # work owith tokens
-
-# predictFromNgrams <- function(ngramSet){
-#   predictFromTextFull <- function(text)
-# }
-
-predictFromTextLarge <- function(text){
-  candidates <- getCandidateNgrams(text,NgramDocStats)
-  if(!isempty(candidates)){
-    candidates <- candidates[order(candidates$pt,decreasing=TRUE),]
-    n <- min(RPTLEN, length(candidates$suff))
-    topOverAllList <- candidates$suff[1:n]
-    topDocsList <- lapply(1:nDocs, function(d){
-      include <- candidates[paste0("p",d)]>0
-      ci <- candidates[include,]
-      ci$suff[order(ci[paste0("p",d)], decreasing=TRUE)]
-    })
+predictor <- function(nds){
+  function(text){
+    candidates <- getCandidateNgrams(text,nds)
+    if(!isempty(candidates)){
+      candidates <- candidates[order(candidates$pt,decreasing=TRUE),]
+      n <- min(RPTLEN, length(candidates$suff))
+      topOverAllList <- candidates$suff[1:n]
+      topDocsList <- lapply(1:nDocs, function(d){
+        include <- candidates[paste0("p",d)]>0
+        ci <- candidates[include,]
+        ci$suff[order(ci[paste0("p",d)], decreasing=TRUE)]
+      })
+    }
+    
+    candidates <- if(!isempty(candidates)) { candidates } else { data.frame() }
+    topDocsList <- if(!isempty(candidates)){ topDocsList } else { list('','','') }
+    
+    topOverAllList <- if(!isempty(candidates)){ topOverAllList } else { '' }
+    list(adNgrams=candidates, uSAD=topOverAllList, tdl=topDocsList, totalNumPred=dim(candidates)[1])
   }
-  
-  candidates <- if(!isempty(candidates)) { candidates } else { data.frame() }
-  topDocsList <- if(!isempty(candidates)){ topDocsList } else { list('','','') }
-  
-  
-  
-  topOverAllList <- if(!isempty(candidates)){ topOverAllList } else { '' }
-  list(adNgrams=candidates, uSAD=topOverAllList, tdl=topDocsList, totalNumPred=dim(candidates)[1])
 }
 
-predictFromTextSmall <- function(text){
-  candidates <- getCandidateNgrams(text,sNDS)
-  if(!isempty(candidates)){
-    candidates <- candidates[order(candidates$pt,decreasing=TRUE),]
-    n <- min(RPTLEN, length(candidates$suff))
-    topOverAllList <- candidates$suff[1:n]
-    topDocsList <- lapply(1:nDocs, function(d){
-      include <- candidates[paste0("p",d)]>0
-      ci <- candidates[include,]
-      ci$suff[order(ci[paste0("p",d)], decreasing=TRUE)]
-    })
-  }
-  
-  candidates <- if(!isempty(candidates)) { candidates } else { data.frame() }
-  topDocsList <- if(!isempty(candidates)){ topDocsList } else { list('','','') }
-  
-  
-  
-  topOverAllList <- if(!isempty(candidates)){ topOverAllList } else { '' }
-  list(adNgrams=candidates, uSAD=topOverAllList, tdl=topDocsList, totalNumPred=dim(candidates)[1])
-}
+predictFromTextLarge <- predictor(NgramDocStats)
+predictFromTextSmall <- predictor(sNDS)
 
 predictFromTextd <- function(text){
   if(!exists("sNDS")) load("shortNDS.RData")

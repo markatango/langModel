@@ -1,15 +1,4 @@
 
-
-
-library(tm)
-library(reshape2)
-library(ggplot2)
-library(slam)
-library(pryr)
-library(pracma)
-library(stringi)
-
-
 N1 <- Ngrams[which(Ngrams$N==1 & Ngrams$doc==2),]
 N2 <- Ngrams[which(Ngrams$N==3 & Ngrams$doc==2),]
 

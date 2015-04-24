@@ -46,12 +46,15 @@ getCandidateNgrams <- function(text,ngramSet){
       docSums <- colSums(cngramSet[,c(as.character(1:nDocs),"total"),], na.rm=TRUE)
       probs <- foreach(b=iter(1:nDocs),.combine="cbind") %do% data.frame(cngramSet[,as.character(b)]/docSums[b])
       names(probs) <- paste0("p",1:nDocs)
+#       probs <- ddply(cngramSet, .(pref), mutate,
+#                      p1 = 1/sum(1),
+#                      p2 = 2/sum(2),
+#                      p3 = 3/sum(3),
+#                      pt = total/sum(total))
       cngramSet <- cbind(cngramSet,probs)
       cngramSet$pt <- cngramSet$total/docSums[length(docSums)]
-      
-      # return
+
       cngramSet
-   
 
     } else {
       data.frame()
