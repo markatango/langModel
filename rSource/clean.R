@@ -1,6 +1,7 @@
 
 # Davies, Mark. (2011) N-grams data from the Corpus of Contemporary American English (COCA). Downloaded from http://www.ngrams.info on April 7, 2015. 
 if(.Platform$OS.type == "unix") {
+
 dirOrigName <- 'data/final/en_US'
 dirCleanName <- 'data/final/en_US_clean'
 dirSampName <- 'data/final/en_US_sample'
@@ -12,7 +13,9 @@ dirSampName <- 'data/final/en_US_sample'
   dirOrigName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US'
   dirCleanName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US_clean'
   dirSampName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US_sample'
-}}
+}
+}
+
 
 # Get the lower case full data initially, clean, one line per sentence
 if (STARTUP & !READDATA){

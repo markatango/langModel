@@ -19,18 +19,36 @@ if(!exists(texts)){
 n <- 1
 NFOLD <- 5
 samplesSizes <- c(0.05,0.025,0.0125,0.00625)
-for(j in sampleSizes){
-  for(i in 1:NFOLD){
+for(i in 1:NFOLD){
+  testSelect <- lapply(nTexts,function(n) {runif(n)<1/NFOLD } )
+  testTexts <- lapply(1:length(testSelect),function(i) texts[[i]][testSelect[[i]]])
+  trainTexts <- lapply(1:length(testSelect),function(i) texts[[i]][!(testSelect[[i]])])
+  
+  # sample the training set for this run
+  ntTexts <- sapply(trainTexts,function(t)length(t))
+  ntDocs <- length(nTexts)
+  
+  # use all the test samples
+  removeFiles(dirSampName)
+  writeSamples(testTexts,dirSampName)
+  dCorpus <- Corpus(DirSource(dirSampName))
+  testTokens <- lapply(1:ntDocs,
+                       function(t) lapply(2:NMAX, 
+                                          function(i) getTokens(i,t)
+                       )
+  )
+  
+  testNgrams <- foreach(b=iter(testTokens),.combine="rbind") %do% {
+    foreach(c=iter(b),.combine="rbind") %do% c
+  }
+  
+  testNgrams$pref <- exPrefix(testNgrams$tokens)
+  testNgrams$suff <- exSuffix(testNgrams$tokens)
+  for(j in sampleSizes){
     
     i <- 1
     j <- 0.00125
-    testSelect <- lapply(nTexts,function(n) {runif(n)<1/NFOLD } )
-    testTexts <- lapply(1:length(testSelect),function(i) texts[[i]][testSelect[[i]]])
-    trainTexts <- lapply(1:length(testSelect),function(i) texts[[i]][!(testSelect[[i]])])
     
-    # sample the training set for this run
-    ntTexts <- sapply(trainTexts,function(t)length(t))
-    ntDocs <- length(nTexts)
     set.seed(1340)
     sampTexts <- lapply(1:length(trainTexts),function(i){
       texts[[i]][sample(1:ntTexts[i], j * ntTexts[i])]
@@ -73,25 +91,12 @@ for(j in sampleSizes){
     
     sNDS <- ddply(NgramDocStats, .(pref), sub10)
 
-   # use all the test samples
-   removeFiles(dirSampName)
-   writeSamples(testTexts,dirSampName)
-   dCorpus <- Corpus(DirSource(dirSampName))
-    testTokens <- lapply(1:ntDocs,
-                            function(t) lapply(2:NMAX, 
-                                               function(i) getTokens(i,t)
-                            )
-    )
    
-   testNgrams <- foreach(b=iter(testTokens),.combine="rbind") %do% {
-     foreach(c=iter(b),.combine="rbind") %do% c
-   }
-   
-   testNgrams$pref <- exPrefix(testNgrams$tokens)
-   testNgrams$suff <- exSuffix(testNgrams$tokens)
    save.image()
    
   }
+  
+  
   # for each testNgram, is suff in predict(pref)
   inOut <- function(testPrefSuf){
     testPrefSuf$suff
