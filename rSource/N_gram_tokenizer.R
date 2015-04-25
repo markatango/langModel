@@ -47,6 +47,23 @@ ngram_tokenizer <- function(n = 1L, skip_word_none = TRUE, skip_word_number = FA
   }
 }
 
+mainTokenizer <- lapply(1:NMAX,function(i) ngram_tokenizer(i))
+
+NGramify <- function(tokens){
+  tab <- table(tokens) 
+  u <- tab < FILTERTHRESHOLD
+  tok <- names(tab[!u])
+  data.frame(tokens=tok, count=tab[!u], stringsAsFactors=FALSE) # i and t are recycled
+}
+
+getTokens <- function(i,t){
+  tok <- mainTokenizer[[i]](content(dCorpus[[t]]))
+  NGs <- NGramify(tok)
+  NGs$N <- i
+  NGs$doc <- t # i and t are recycled
+  NGs
+}
+
 # expect_equal <- function(a,b) a==b
 # 
 # expect_equal(

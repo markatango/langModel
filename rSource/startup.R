@@ -18,29 +18,36 @@ SAMPLEDATA <- FALSE
 MAKENGRAMS <- FALSE
 SAMPLESIZE <- 1
 RPTLEN <- 5
+GRAPHLEN <- 10
 NMAX <- 4
-FILTERTHRESHOLD <- 2
+FILTERTHRESHOLD <- 3
+
+if(.Platform$OS.type == "unix") {
+  source("rSource/helpers.R")
+  source("rSource/cleanText.R")
+  source("rSource/N_gram_tokenizer.R")
+} else {
+  source("rSource\\helpers.R")
+  source("rSource\\cleanText.R")
+  source("rSource\\N_gram_tokenizer.R")
+}
 
 if(.Platform$OS.type == "unix") {
   source("rSource/clean.R")
-} else{
+} else {
   source("rSource\\clean.R")
 }
 
-if(!exists("sNDS")) load("shortNDS.RData")
+#if(!exists("sNDS")) load("shortNDS.RData")
 #docNames <- fileList
 #nDocs <- length(fileList)
 
 if(.Platform$OS.type == "unix") {
-
-  source("rSource/cleanText.R")
-  source("rSource/helpers.R")
+  
   source("rSource/getCandidates.R")
   source("rSource/predict.R")
-  
 } else {
-  source("rSource\\cleanText.R")
-  source("rSource\\helpers.R")
+  
   source("rSource\\getCandidates.R")
   source("rSource\\predict.R")
 }

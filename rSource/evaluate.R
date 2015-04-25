@@ -1,4 +1,3 @@
-library(caret)
 
 # remove existing corpus and ngram data and tokens to free up memory
 rm(dCorpus,Ngrams,NgramDocStats,tokens)
@@ -19,13 +18,19 @@ for(j in sampleSizes){
     trainTexts <- lapply(1:length(testSelect),function(i) texts[[i]][!(testSelect[[i]])])
     
     # sample the training set for this run
-    dCorpus <- 
-      
+    ntTexts <- sapply(trainTexts,function(t)length(t))
+    ntDocs <- length(nTexts)
+    set.seed(1340)
+    sampTexts <- lapply(1:length(trainTexts),function(i){
+      texts[[i]][sample(1:ntTexts[i], j * ntTexts[i])]
+    })
+    removeFiles(dirSampName)
+    writeSamples(sampTexts,dirSampName)
     
-   
-    
-    tokens <- lapply(1:nDocs,
-                     function(t) lapply(1:NMAX, 
+    dCorpus <- Corpus(DirSource(dirSampName))
+        
+    tokens <- lapply(1:ntDocs,
+                     function(t) lapply(2:NMAX, 
                                         function(i) getTokens(i,t)
                      )
     )
@@ -34,24 +39,50 @@ for(j in sampleSizes){
       foreach(c=iter(b),.combine="rbind") %do% c
     }
     
-    Ngrams$pref <- exPref(Ngrams$tokens)
-    Ngrams$suff <- exSuff(Ngrams$tokens)
+    Ngrams$pref <- exPrefix(Ngrams$tokens)
+    Ngrams$suff <- exSuffix(Ngrams$tokens)
     
     Ngrams <- Ngrams[,-which(names(Ngrams)=="tokens")]
-    Ngrams <- Ngrams[order(Ngrams$count,decreasing=TRUE),]
-    Ngrams <- Ngrams[order(Ngrams$N),]
-    Ngrams <- Ngrams[order(Ngrams$doc),]
+    Ngrams <- Ngrams[order(-Ngrams$count, Ngrams$N, Ngrams$doc),]
+    Ngrams <- Ngrams[which(Ngrams$suff!=""),]
+    #Ngrams <- Ngrams[-which(Ngrams$count<FILTERTHRESHOLD),]
     Ngrams$n <- 1:dim(Ngrams)[1]
     
+    
     NgramDocStats <- dcast(Ngrams, pref+suff~doc,value.var="count",sum)
-    NgramDocStats$total <- rowSums(NgramDocStats[,c("1","2","3")], na.rm=TRUE)
+    NgramDocStats$total <- rowSums(NgramDocStats[,c(as.character(1:ntDocs))], na.rm=TRUE)
+    NgramDocStats <- NgramDocStats[order(NgramDocStats$pref, -NgramDocStats$total),]
+    
+    subber <- function(n){
+      function(df) df[1:min(n,dim(df)[1]),]
+    }
+    sub5 <- subber(5)
+    sub10 <- subber(10)
+    sub15 <- subber(15)
+    
+    sNDS <- ddply(NgramDocStats, .(pref), sub10)
 
    # use all the test samples
-    testTokens <- makeTokens(sampleText(testTexts,1))
+   removeFiles(dirSampName)
+   writeSamples(testTexts,dirSampName)
+   dCorpus <- Corpus(DirSource(dirSampName))
+    testTokens <- lapply(1:ntDocs,
+                            function(t) lapply(2:NMAX, 
+                                               function(i) getTokens(i,t)
+                            )
+    )
    
-    # prepare the training token set
-    trainNgrams <- makeNgramSets(trainTokens)
-    testNgrams <- makeNgramSets(testTokens)
-
+   testNgrams <- foreach(b=iter(testTokens),.combine="rbind") %do% {
+     foreach(c=iter(b),.combine="rbind") %do% c
+   }
    
-}
+   testNgrams$pref <- exPrefix(testNgrams$tokens)
+   testNgrams$suff <- exSuffix(testNgrams$tokens)
+   save.image()
+   
+  }
+  # for each testNgram, is suff in predict(pref)
+  inOut <- function(testPrefSuf){
+    testPrefSuf$suff
+  }
+  }

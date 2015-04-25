@@ -1,9 +1,9 @@
 
 # Davies, Mark. (2011) N-grams data from the Corpus of Contemporary American English (COCA). Downloaded from http://www.ngrams.info on April 7, 2015. 
 
-dirOrigName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US'
-dirCleanName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US_clean'
-dirSampName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US_sample'
+dirOrigName <- 'data/final/en_US'
+dirCleanName <- 'data/final/en_US_clean'
+dirSampName <- 'data/final/en_US_sample'
 
 # Get the lower case full data initially, clean, one line per sentence
 if (STARTUP & !READDATA){
@@ -26,6 +26,7 @@ if (STARTUP & !READDATA){
   docNames <- fileList
   removeFiles(dirCleanName)
   writeSamples(texts,dirCleanName)
+
   save.image()
 }
 
@@ -63,22 +64,7 @@ if (SAMPLEDATA){
 }
 
 if (MAKENGRAMS){
-  mainTokenizer <- lapply(1:NMAX,function(i) ngram_tokenizer(i))
   
-  NGramify <- function(tokens){
-    tab <- table(tokens) 
-    u <- tab < FILTERTHRESHOLD
-    tok <- names(tab[!u])
-    data.frame(tokens=tok, count=tab[!u], stringsAsFactors=FALSE) # i and t are recycled
-  }
-  
-  getTokens <- function(i,t){
-    tok <- mainTokenizer[[i]](content(dCorpus[[t]]))
-    NGs <- NGramify(tok)
-    NGs$N <- i
-    NGs$doc <- t # i and t are recycled
-    NGs
-  }
   
   tokens <- lapply(1:nDocs,
                    function(t) lapply(2:NMAX, 
@@ -96,7 +82,7 @@ if (MAKENGRAMS){
   Ngrams <- Ngrams[,-which(names(Ngrams)=="tokens")]
   Ngrams <- Ngrams[order(-Ngrams$count, Ngrams$N, Ngrams$doc),]
   Ngrams <- Ngrams[which(Ngrams$suff!=""),]
-  Ngrams <- Ngrams[which(Ngrams$count<3),]
+  Ngrams <- Ngrams[which(Ngrams$count<FILTERTHRESHOLD),]
   Ngrams$n <- 1:dim(Ngrams)[1]
   
   
