@@ -3,7 +3,18 @@
 rm(dCorpus,Ngrams,NgramDocStats,tokens)
 gc()
 
-
+# load the reduced full text sets so things fit into memory
+if(!exists(texts)){
+  # If already present just read in here to sample
+  fileNames <- system(paste("dir ", dirSampleName),intern=TRUE)
+  fileList <- strsplit(fileNames, "\\s+")[[1]]
+  fullFileNames <- paste(dirSampleName,"/",fileList,sep="")
+  
+  texts <- lapply(fullFileNames, readLines)
+  nTexts <- sapply(texts,function(t)length(t))
+  nDocs <- length(nTexts)
+  docNames <- fileList
+}
 
 n <- 1
 NFOLD <- 5
