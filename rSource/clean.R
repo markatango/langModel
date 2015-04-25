@@ -1,23 +1,17 @@
 
 # Davies, Mark. (2011) N-grams data from the Corpus of Contemporary American English (COCA). Downloaded from http://www.ngrams.info on April 7, 2015. 
-if(.Platform$OS.type == "unix") {
-
-dirOrigName <- 'data/final/en_US'
-dirCleanName <- 'data/final/en_US_clean'
-dirSampName <- 'data/final/en_US_sample'
-dirTempName <- 'data/final/en_US_temp'
-} else { if(!ONSURFACE){
-  dirOrigName <- 'data\\final\\en_US'
-  dirCleanName <- 'data\\final\\en_US_clean'
-  dirSampName <- 'data\\final\\en_US_sample'
-  dirTempName <- 'data\\final\\en_US_temp'
+if(!ONSURFACE){
+  dirOrigName <- 'data/final/en_US'
+  dirCleanName <- 'data/final/en_US_clean'
+  dirSampName <- 'data/final/en_US_sample'
+  dirTempName <- 'data/final/en_US_temp'
 } else {
-  dirOrigName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US'
-  dirCleanName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US_clean'
-  dirSampName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US_sample'
-  dirTempName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US_temp'
+  dirOrigName <- 'D:/capstone-dataset/Coursera-SwiftKey/final/en_US'
+  dirCleanName <- 'D:/capstone-dataset/Coursera-SwiftKey/final/en_US_clean'
+  dirSampName <- 'D:/capstone-dataset/Coursera-SwiftKey/final/en_US_sample'
+  dirTempName <- 'D:/capstone-dataset/Coursera-SwiftKey/final/en_US_temp'
 }
-}
+
 
 
 # Get the lower case full data initially, clean, one line per sentence
@@ -46,13 +40,13 @@ if (STARTUP & !READDATA){
 }
 
 if (STARTUP & READDATA){
-  # If already present just read in here to sample
+  # If clean data is already present just read in here to sample
   fileNames <- system(paste("dir ", dirCleanName),intern=TRUE)
   fileList <- strsplit(fileNames, "\\s+")[[1]]
   fullFileNames <- paste(dirCleanName,"/",fileList,sep="")
   
   texts <- lapply(fullFileNames, readLines)
-  texts <- lapply(texts,cleanText)
+ 
   nTexts <- sapply(texts,function(t)length(t))
   nDocs <- length(nTexts)
   docNames <- fileList
@@ -62,7 +56,7 @@ if (STARTUP & READDATA){
 
 
 ####################  START HERE #################################
-SAMPLESIZE <- 0.01
+SAMPLESIZE <- 0.2
 if (SAMPLEDATA){
   set.seed(1340)
   sampTexts <- lapply(1:length(texts),function(i){

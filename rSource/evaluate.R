@@ -5,12 +5,12 @@ inOut <- function(testNgram){
 # remove existing corpus and ngram data and tokens to free up memory
 rm(dCorpus,Ngrams,NgramDocStats,tokens)
 gc()
-n <- 1
+
 NFOLD <- 5
 samplesSizes <- c(0.5,0.25,0.125,0.0625)
 perf <- matrix(rep(0,NFOLD*length(samplesSizes)),nrow=NFOLD)
 # load the reduced full text sets so things fit into memory
-if(!exists(texts)){
+if(!exists("texts")){
   # If already present just read in here to sample
   fileList <- paste(unlist(strsplit(system(paste("dir ", dirSampName),intern=TRUE),"\\s+")),sep=" ")
   fullFileNames <- paste(dirSampName,"/",fileList,sep="")
@@ -21,9 +21,6 @@ if(!exists(texts)){
   docNames <- fileList
 }
 
-
-i <- 1
-j <- samplesSizes[3]
 for(i in 1:NFOLD){
   testSelect <- lapply(nTexts,function(n) {runif(n)<1/NFOLD } )
   testTexts <- lapply(1:length(testSelect),function(i) texts[[i]][testSelect[[i]]])
@@ -43,7 +40,6 @@ for(i in 1:NFOLD){
                        )
   )
 
-  
   testNgrams <- foreach(b=iter(testTokens),.combine="rbind") %do% {
     foreach(c=iter(b),.combine="rbind") %do% c
   }
