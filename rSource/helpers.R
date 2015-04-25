@@ -65,6 +65,7 @@ readCleanAndSample <- function(f,dirName) {
 }
 
 removeFiles <- function(dirName){
+  dirName <- gsub("\\\\","/",dirName)
   system(paste0("rm ",dirName,"/*.*",collapse=""))
 }
 

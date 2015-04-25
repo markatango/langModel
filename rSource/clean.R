@@ -5,14 +5,17 @@ if(.Platform$OS.type == "unix") {
 dirOrigName <- 'data/final/en_US'
 dirCleanName <- 'data/final/en_US_clean'
 dirSampName <- 'data/final/en_US_sample'
+dirTempName <- 'data/final/en_US_temp'
 } else { if(!ONSURFACE){
   dirOrigName <- 'data\\final\\en_US'
   dirCleanName <- 'data\\final\\en_US_clean'
   dirSampName <- 'data\\final\\en_US_sample'
+  dirTempName <- 'data\\final\\en_US_temp'
 } else {
   dirOrigName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US'
   dirCleanName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US_clean'
   dirSampName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US_sample'
+  dirTempName <- 'D:\\capstone-dataset\\Coursera-SwiftKey\\final\\en_US_temp'
 }
 }
 
@@ -49,6 +52,7 @@ if (STARTUP & READDATA){
   fullFileNames <- paste(dirCleanName,"/",fileList,sep="")
   
   texts <- lapply(fullFileNames, readLines)
+  texts <- lapply(texts,cleanText)
   nTexts <- sapply(texts,function(t)length(t))
   nDocs <- length(nTexts)
   docNames <- fileList
@@ -58,7 +62,7 @@ if (STARTUP & READDATA){
 
 
 ####################  START HERE #################################
-SAMPLESIZE <- 0.2
+SAMPLESIZE <- 0.01
 if (SAMPLEDATA){
   set.seed(1340)
   sampTexts <- lapply(1:length(texts),function(i){
@@ -66,9 +70,7 @@ if (SAMPLEDATA){
   })
   
   removeFiles(dirSampName)
-  
   writeSamples(sampTexts,dirSampName)
-  
   rm(texts,sampTexts)
   gc()
   
@@ -76,8 +78,6 @@ if (SAMPLEDATA){
 }
 
 if (MAKENGRAMS){
-  
-  
   tokens <- lapply(1:nDocs,
                    function(t) lapply(2:NMAX, 
                                       function(i) getTokens(i,t)
@@ -94,9 +94,8 @@ if (MAKENGRAMS){
   Ngrams <- Ngrams[,-which(names(Ngrams)=="tokens")]
   Ngrams <- Ngrams[order(-Ngrams$count, Ngrams$N, Ngrams$doc),]
   Ngrams <- Ngrams[which(Ngrams$suff!=""),]
-  Ngrams <- Ngrams[which(Ngrams$count<FILTERTHRESHOLD),]
+  #Ngrams <- Ngrams[-which(Ngrams$count<FILTERTHRESHOLD),]
   Ngrams$n <- 1:dim(Ngrams)[1]
-  
   
   NgramDocStats <- dcast(Ngrams, pref+suff~doc,value.var="count",sum)
   NgramDocStats$total <- rowSums(NgramDocStats[,c(as.character(1:nDocs))], na.rm=TRUE)

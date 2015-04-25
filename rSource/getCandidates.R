@@ -1,7 +1,3 @@
-
-library(foreach)
-library(iterators)
-
 getCandidateNgrams <- function(text,ngramSet){
   # Clean search text the same way we cleaned the source documents
   cText <- strTrim(text)

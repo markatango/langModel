@@ -52,16 +52,23 @@ mainTokenizer <- lapply(1:NMAX,function(i) ngram_tokenizer(i))
 NGramify <- function(tokens){
   tab <- table(tokens) 
   u <- tab < FILTERTHRESHOLD
-  tok <- names(tab[!u])
-  data.frame(tokens=tok, count=tab[!u], stringsAsFactors=FALSE) # i and t are recycled
+  if (length(u)>0){
+    tok <- names(tab[!u])
+                   data.frame(tokens=tok, count=tab[!u], stringsAsFactors=FALSE) 
+  } else { data.frame(tokens="",count=0) }
+  
 }
 
 getTokens <- function(i,t){
   tok <- mainTokenizer[[i]](content(dCorpus[[t]]))
   NGs <- NGramify(tok)
-  NGs$N <- i
-  NGs$doc <- t # i and t are recycled
-  NGs
+  if (dim(NGs)[1]>0) {
+    NGs$N <- i
+    NGs$doc <- t # i and t are recycled
+    NGs
+  } else { 
+  data.frame(tokens=c(" "," "), count=0, N=0, doc=0)
+  }
 }
 
 # expect_equal <- function(a,b) a==b

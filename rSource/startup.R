@@ -14,44 +14,26 @@ library(caret)
 ONSURFACE <- FALSE
 DEBUGMODE <- FALSE
 STARTUP <- TRUE
-READDATA <- FALSE
+READDATA <- TRUE
 SAMPLEDATA <- TRUE
 MAKENGRAMS <- TRUE
 SAMPLESIZE <- 1
 RPTLEN <- 5
 GRAPHLEN <- 10
 NMAX <- 4
-FILTERTHRESHOLD <- 3
+FILTERTHRESHOLD <- 1
 
-if(.Platform$OS.type == "unix") {
-  source("rSource/helpers.R")
-  source("rSource/cleanText.R")
-  source("rSource/N_gram_tokenizer.R")
-} else {
-  source("rSource\\helpers.R")
-  source("rSource\\cleanText.R")
-  source("rSource\\N_gram_tokenizer.R")
-}
+source("rSource/helpers.R", echo=TRUE)
+source("rSource/cleanText.R", echo=TRUE)
+source("rSource/N_gram_tokenizer.R", echo=TRUE)
+source("rSource/clean.R", echo=TRUE)
 
-if(.Platform$OS.type == "unix") {
-  source("rSource/clean.R")
-} else {
-  source("rSource\\clean.R")
-}
 
 #if(!exists("sNDS")) load("shortNDS.RData")
 #docNames <- fileList
 #nDocs <- length(fileList)
-
-if(.Platform$OS.type == "unix") {
-  
-  source("rSource/getCandidates.R")
-  source("rSource/predict.R")
-} else {
-  
-  source("rSource\\getCandidates.R")
-  source("rSource\\predict.R")
-}
+source("rSource/getCandidates.R", echo=TRUE)
+source("rSource/predict.R", echo=TRUE)
 
 set.seed(1340)
 

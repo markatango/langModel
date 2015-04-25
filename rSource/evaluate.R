@@ -1,14 +1,19 @@
+inOut <- function(testNgram){
+  testNgram$suff %in%  predictFromTextFold(testNgram$pref)$uSAD
+}
 
 # remove existing corpus and ngram data and tokens to free up memory
 rm(dCorpus,Ngrams,NgramDocStats,tokens)
 gc()
-
+n <- 1
+NFOLD <- 5
+samplesSizes <- c(0.5,0.25,0.125,0.0625)
+perf <- matrix(rep(0,NFOLD*length(samplesSizes)),nrow=NFOLD)
 # load the reduced full text sets so things fit into memory
 if(!exists(texts)){
   # If already present just read in here to sample
-  fileNames <- system(paste("dir ", dirSampleName),intern=TRUE)
-  fileList <- strsplit(fileNames, "\\s+")[[1]]
-  fullFileNames <- paste(dirSampleName,"/",fileList,sep="")
+  fileList <- paste(unlist(strsplit(system(paste("dir ", dirSampName),intern=TRUE),"\\s+")),sep=" ")
+  fullFileNames <- paste(dirSampName,"/",fileList,sep="")
   
   texts <- lapply(fullFileNames, readLines)
   nTexts <- sapply(texts,function(t)length(t))
@@ -16,9 +21,9 @@ if(!exists(texts)){
   docNames <- fileList
 }
 
-n <- 1
-NFOLD <- 5
-samplesSizes <- c(0.05,0.025,0.0125,0.00625)
+
+i <- 1
+j <- samplesSizes[3]
 for(i in 1:NFOLD){
   testSelect <- lapply(nTexts,function(n) {runif(n)<1/NFOLD } )
   testTexts <- lapply(1:length(testSelect),function(i) texts[[i]][testSelect[[i]]])
@@ -29,34 +34,33 @@ for(i in 1:NFOLD){
   ntDocs <- length(nTexts)
   
   # use all the test samples
-  removeFiles(dirSampName)
-  writeSamples(testTexts,dirSampName)
-  dCorpus <- Corpus(DirSource(dirSampName))
+  removeFiles(dirTempName)
+  writeSamples(testTexts,dirTempName)
+  dCorpus <- Corpus(DirSource(dirTempName))
   testTokens <- lapply(1:ntDocs,
                        function(t) lapply(2:NMAX, 
                                           function(i) getTokens(i,t)
                        )
   )
+
   
   testNgrams <- foreach(b=iter(testTokens),.combine="rbind") %do% {
     foreach(c=iter(b),.combine="rbind") %do% c
   }
+  testNgrams <- testNgrams[-which(testNgrams$doc==0),]
   
   testNgrams$pref <- exPrefix(testNgrams$tokens)
   testNgrams$suff <- exSuffix(testNgrams$tokens)
-  for(j in sampleSizes){
-    
-    i <- 1
-    j <- 0.00125
-    
+  
+  for(j in 1:length(sampleSizes)){
     set.seed(1340)
     sampTexts <- lapply(1:length(trainTexts),function(i){
-      texts[[i]][sample(1:ntTexts[i], j * ntTexts[i])]
+      texts[[i]][sample(1:ntTexts[i], sampleSizes[j] * ntTexts[i])]
     })
-    removeFiles(dirSampName)
-    writeSamples(sampTexts,dirSampName)
+    removeFiles(dirTempName)
+    writeSamples(sampTexts,dirTempName)
     
-    dCorpus <- Corpus(DirSource(dirSampName))
+    dCorpus <- Corpus(DirSource(dirTempName))
         
     tokens <- lapply(1:ntDocs,
                      function(t) lapply(2:NMAX, 
@@ -68,8 +72,8 @@ for(i in 1:NFOLD){
       foreach(c=iter(b),.combine="rbind") %do% c
     }
     
-    Ngrams$pref <- exPrefix(Ngrams$tokens)
-    Ngrams$suff <- exSuffix(Ngrams$tokens)
+    Ngrams$pref <- unlist(exPrefix(Ngrams$tokens))
+    Ngrams$suff <- unlist(exSuffix(Ngrams$tokens))
     
     Ngrams <- Ngrams[,-which(names(Ngrams)=="tokens")]
     Ngrams <- Ngrams[order(-Ngrams$count, Ngrams$N, Ngrams$doc),]
@@ -90,15 +94,16 @@ for(i in 1:NFOLD){
     sub15 <- subber(15)
     
     sNDS <- ddply(NgramDocStats, .(pref), sub10)
-
-   
-   save.image()
-   
+    
+    # for each testNgram, is suff in predict(pref)
+    predictFromTextFold <- predictor(sNDS)
+    for (k in  1: dim(testNgrams)[1]) {
+      perf[i,j] <- perf[i,j] + inOut(testNgrams[k,])*1
+    }
+    perf[i,j] <- perf[i,j]/dim(testNgrams)[1]
   }
   
   
-  # for each testNgram, is suff in predict(pref)
-  inOut <- function(testPrefSuf){
-    testPrefSuf$suff
-  }
-  }
+  
+  
+}
