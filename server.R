@@ -3,6 +3,8 @@ if(.Platform$OS.type == "unix") {
 } else {
   source("rSource\\startup.R",echo=TRUE, verbose=FALSE)
 }
+nDocs <- 3
+if (!exists("sNDS")) load("shortNDS.RData")
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
@@ -43,6 +45,7 @@ shinyServer(function(input, output) {
   
   output$plot <- renderPlot({ plotAll(s1()$adNgrams) })
   output$results <- renderText({ s1()$uSAD[1:min(length(s1()$uSAD), RPTLEN)] })
+  output$best <- renderText({ s1()$uSAD[1] })
   
 
 })

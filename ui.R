@@ -11,6 +11,10 @@ shinyUI(
                  textInput("text",
                            label="Enter begining text",
                            value="Type something...")
+          ),
+		  column(1,""),
+          column(4,h4("Next word"),
+                 h3(textOutput("best"))
           )
         )
       ),

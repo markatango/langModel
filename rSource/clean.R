@@ -6,10 +6,10 @@ if(!ONSURFACE){
   dirSampName <- 'data/final/en_US_sample'
   dirTempName <- 'data/final/en_US_temp'
 } else {
-  dirOrigName <- 'D:/capstone-dataset/Coursera-SwiftKey/final/en_US'
-  dirCleanName <- 'D:/capstone-dataset/Coursera-SwiftKey/final/en_US_clean'
-  dirSampName <- 'D:/capstone-dataset/Coursera-SwiftKey/final/en_US_sample'
-  dirTempName <- 'D:/capstone-dataset/Coursera-SwiftKey/final/en_US_temp'
+  dirOrigName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US'
+  dirCleanName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US_clean'
+  dirSampName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US_sample'
+  dirTempName <- 'D:/Capstone-language-analysis/Coursera-SwiftKey/final/en_US_temp'
 }
 
 
@@ -68,6 +68,8 @@ if (SAMPLEDATA){
   gc()
   
   dCorpus <- Corpus(DirSource(dirSampName))
+  nDocs <- length(dCorpus)
+  nTexts <- sapply(lapply(dCorpus,content),length)
 }
 
 if (MAKENGRAMS){
