@@ -1,6 +1,4 @@
-inOut <- function(testNgram){
-  testNgram$suff %in%  predictFromTextFold(testNgram$pref)$uSAD
-}
+
 
 # remove existing corpus and ngram data and tokens to free up memory
 rm(dCorpus,Ngrams,NgramDocStats,tokens)
@@ -30,7 +28,11 @@ for(i in 1:NFOLD){
   ntTexts <- sapply(trainTexts,function(t)length(t))
   ntDocs <- length(nTexts)
   
-  # use all the test samples
+  # use a subsample of the test samples due to speed considerations
+  nttTtexts <- sapply(testTexts,function(t)length(t))
+  testTexts <- lapply(1:length(testTexts),function(i){
+    testTexts[[i]][sample(1:nttTtexts[i], min(TESTSUBSAMPLESIZE,nttTtexts[i]))]
+  })
   removeFiles(dirTempName)
   writeSamples(testTexts,dirTempName)
   dCorpus <- Corpus(DirSource(dirTempName))
@@ -43,15 +45,15 @@ for(i in 1:NFOLD){
   testNgrams <- foreach(b=iter(testTokens),.combine="rbind") %do% {
     foreach(c=iter(b),.combine="rbind") %do% c
   }
-  testNgrams <- testNgrams[-which(testNgrams$doc==0),]
+  #testNgrams <- testNgrams[-which(testNgrams$doc==0),]
   
   testNgrams$pref <- exPrefix(testNgrams$tokens)
   testNgrams$suff <- exSuffix(testNgrams$tokens)
   
-  for(j in 1:length(sampleSizes)){
+  for(j in 1:length(samplesSizes)){
     set.seed(1340)
     sampTexts <- lapply(1:length(trainTexts),function(i){
-      texts[[i]][sample(1:ntTexts[i], sampleSizes[j] * ntTexts[i])]
+      trainTexts[[i]][sample(1:ntTexts[i], samplesSizes[j] * ntTexts[i])]
     })
     removeFiles(dirTempName)
     writeSamples(sampTexts,dirTempName)
@@ -82,9 +84,7 @@ for(i in 1:NFOLD){
     NgramDocStats$total <- rowSums(NgramDocStats[,c(as.character(1:ntDocs))], na.rm=TRUE)
     NgramDocStats <- NgramDocStats[order(NgramDocStats$pref, -NgramDocStats$total),]
     
-    subber <- function(n){
-      function(df) df[1:min(n,dim(df)[1]),]
-    }
+    
     sub5 <- subber(5)
     sub10 <- subber(10)
     sub15 <- subber(15)
@@ -98,8 +98,9 @@ for(i in 1:NFOLD){
     }
     perf[i,j] <- perf[i,j]/dim(testNgrams)[1]
   }
-  
-  
-  
-  
 }
+perf.df <-as.data.frame(perf)
+names(perf.df) <- paste(samplesSizes,sep=" ")
+save(perf.df, file=paste0("perf_",TESTSUBSAMPLESIZE,".RData"))
+
+

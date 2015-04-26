@@ -55,7 +55,7 @@ NGramify <- function(tokens){
   if (length(u)>0){
     tok <- names(tab[!u])
                    data.frame(tokens=tok, count=tab[!u], stringsAsFactors=FALSE) 
-  } else { data.frame(tokens="",count=0) }
+  } else { data.frame(tokens=c(" "," "),count=0) }
   
 }
 

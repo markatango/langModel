@@ -105,3 +105,12 @@ exSuffix <- function(tokens){
   })
 }
   
+
+inOut <- function(testNgram){
+  testNgram$suff %in%  predictFromTextFold(testNgram$pref)$uSAD
+}
+
+subber <- function(n){
+  function(df) df[1:min(n,dim(df)[1]),]
+}
+

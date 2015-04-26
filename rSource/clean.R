@@ -54,7 +54,6 @@ if (STARTUP & READDATA){
   save.image()
 }
 
-
 ####################  START HERE #################################
 SAMPLESIZE <- 0.2
 if (SAMPLEDATA){
@@ -94,22 +93,11 @@ if (MAKENGRAMS){
   NgramDocStats <- dcast(Ngrams, pref+suff~doc,value.var="count",sum)
   NgramDocStats$total <- rowSums(NgramDocStats[,c(as.character(1:nDocs))], na.rm=TRUE)
   NgramDocStats <- NgramDocStats[order(NgramDocStats$pref, -NgramDocStats$total),]
-  
-  subber <- function(n){
-    function(df) df[1:min(n,dim(df)[1]),]
-  }
-  sub5 <- subber(5)
+ 
   sub10 <- subber(10)
-  sub15 <- subber(15)
-  
   sNDS <- ddply(NgramDocStats, .(pref), sub10)
-#   dNDS <- sNDS[,c("pref","suff")]
 
-
-#  save.image(".RData")
   save(sNDS,file="shortNDS.RData")
-#  save(dNDS,file="predictors.RData")
-  
 }
 
 

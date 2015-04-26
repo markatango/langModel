@@ -13,25 +13,22 @@ library(caret)
 
 ONSURFACE <- FALSE
 DEBUGMODE <- FALSE
-STARTUP <- TRUE
+STARTUP <- FALSE
 READDATA <- FALSE
-SAMPLEDATA <- TRUE
-MAKENGRAMS <- TRUE
+SAMPLEDATA <- FALSE
+MAKENGRAMS <- FALSE
 SAMPLESIZE <- 1
 RPTLEN <- 5
 GRAPHLEN <- 10
 NMAX <- 4
 FILTERTHRESHOLD <- 1
+TESTSUBSAMPLESIZE <- 1000
 
 source("rSource/helpers.R", echo=TRUE)
 source("rSource/cleanText.R", echo=TRUE)
 source("rSource/N_gram_tokenizer.R", echo=TRUE)
 source("rSource/clean.R", echo=TRUE)
 
-
-#if(!exists("sNDS")) load("shortNDS.RData")
-#docNames <- fileList
-#nDocs <- length(fileList)
 source("rSource/getCandidates.R", echo=TRUE)
 source("rSource/predict.R", echo=TRUE)
 
