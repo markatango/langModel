@@ -107,7 +107,9 @@ exSuffix <- function(tokens){
   
 
 inOut <- function(testNgram){
-  testNgram$suff %in%  predictFromTextFold(testNgram$pref)$uSAD
+  pWords <- predictFromTextFold(testNgram$pref)$uSAD
+  lpw <- 
+  testNgram$suff %in%  pWords[1:min(3,length(pWords))]
 }
 
 subber <- function(n){
