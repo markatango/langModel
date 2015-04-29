@@ -23,18 +23,10 @@ exSuffix <- function(tokens){
   })
 }
 
-subber <- function(min,max){
-  function(df) {
-    m <- dim(df)[1]
-    if(m>=min) {
-      df[1:min(max,m),]
-    } else {
-      data.frame(stringsAsFactors=FALSE)
-    }
-  }
-    
-}
 
+subber <- function(n){
+  function(df) df[1:min(n,dim(df)[1]),]
+}
 
 #==========================  START ================================
 
@@ -44,6 +36,9 @@ stopExists <- stopExistsMod("makeNgrams.R")
 stopExists("dCorpus")
 stopExists("nDocs")
 
+# This method manages memory during tokenization to handle the most data
+# one document is tokenized at one 'n' level each pass.
+# intermediate data is removed
 sNDS <- data.frame()
 for (i in 2:NMAX) {
    for (t in 1:nDocs) {
@@ -57,10 +52,16 @@ for (i in 2:NMAX) {
      rm(ng)
    }
 }
+
+# reshape and add totals
 sNDS <-melt(sNDS,id=c("pref","suff","N","doc"),measure="count")
 sNDS <- dcast(sNDS,pref+suff+N~doc,sum)
 sNDS$total <- rowSums(sNDS[,c(as.character(1:nDocs))], na.rm=TRUE)
-sNDS <- sNDS[order(sNDS$pref,sNDS$N, -sNDS$total),]
+
+# decrease size of dataset since we only need to predict and graph the top few of each prefix
+sNDS <- sNDS[order(sNDS$pref, -sNDS$total),]
+sub10 <- subber(10)
+sNDS <- ddply(sNDS, .(pref), sub10)
 
 save(sNDS,file="shortNDS.RData")
 
