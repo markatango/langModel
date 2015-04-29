@@ -49,6 +49,7 @@ echoSource("cleanText.R")
 if(STARTUP){
   SAMPLESIZE <- 1
   echoSource("getSourceData.R")
+  STARTUP <- FALSE
 }
 
 if(SAMPLEDATA){
@@ -59,6 +60,7 @@ if(SAMPLEDATA){
 
 if(MAKENGRAMS){
   echoSource("makeNgrams.R")
+  MAKENGRAMS <- FALSE
 }
 echoSource("getCandidates.R")
 echoSource("predict.R")
