@@ -39,6 +39,7 @@ predictor <- function(nds){
 
 #========================  Start =========================
 stopExists <- stopExistsMod("predict.R")
+if(!exists("sNDS")) load("shortNDS.RData")
 stopExists("sNDS")
 
 #predictFromTextLarge <- predictor(NgramDocStats)
