@@ -8,3 +8,7 @@ docs/
 figs/
 data/
 .Rproj.user
+.RDataTmp
+dcorpus.dc
+rSource/reshapeTest.R
+

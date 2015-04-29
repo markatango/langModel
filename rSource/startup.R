@@ -17,20 +17,51 @@ STARTUP <- FALSE
 READDATA <- FALSE
 SAMPLEDATA <- FALSE
 MAKENGRAMS <- FALSE
-SAMPLESIZE <- 1
 RPTLEN <- 5
 GRAPHLEN <- 10
 NMAX <- 4
 FILTERTHRESHOLD <- 1
 TESTSUBSAMPLESIZE <- 1000
 
-source("rSource/helpers.R", echo=TRUE)
-source("rSource/cleanText.R", echo=TRUE)
-source("rSource/N_gram_tokenizer.R", echo=TRUE)
-source("rSource/clean.R", echo=TRUE)
+echoRDir <- function(dir){
+  function(rfile) {
+    fName <- paste0(dir,"/",rfile)
+    source(fName, echo=TRUE) 
+  }
+}
 
-source("rSource/getCandidates.R", echo=TRUE)
-source("rSource/predict.R", echo=TRUE)
+stopExistsMod <- function(ch.rModule) {
+  function(ch.obj) if (!exists(ch.obj)) stop(paste0(ch.rModule,": '",ch.obj,"' ","does not exist"))
+}
+  
+echoSource <- echoRDir("rSource")
+
+#==========================  START ================================
 
 set.seed(1340)
+
+
+echoSource("helpers.R")
+echoSource("cleanText.R")
+
+## set sample size for initial data input
+# creates full, clean data files in the clean data directory
+if(STARTUP){
+  SAMPLESIZE <- 1
+  echoSource("getSourceData.R")
+}
+
+if(SAMPLEDATA){
+  SAMPLESIZE <- 0.2
+  echoSource("sampleSourceData.R")
+}
+# creates a subset of clean data from "texts" which must be in memory
+
+if(MAKENGRAMS){
+  echoSource("makeNgrams.R")
+}
+echoSource("getCandidates.R")
+echoSource("predict.R")
+
+
 

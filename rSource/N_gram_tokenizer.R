@@ -54,7 +54,7 @@ NGramify <- function(tokens){
   u <- tab < FILTERTHRESHOLD
   if (length(u)>0){
     tok <- names(tab[!u])
-                   data.frame(tokens=tok, count=tab[!u], stringsAsFactors=FALSE) 
+    data.frame(tokens=tok, count=tab[!u], stringsAsFactors=FALSE) 
   } else { data.frame(tokens=c(" "," "),count=0) }
   
 }

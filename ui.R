@@ -12,17 +12,23 @@ shinyUI(
                            label="Enter begining text",
                            value="Type something...")
           ),
-		  column(1,""),
-          column(4,h4("Next word"),
-                 h3(textOutput("best"))
+    		  column(1,""),
+              column(4,h4("Next word"),
+                     h3(textOutput("best"))
           )
-        )
+        ),
+  		  fluidRow(
+          h5("For more information about this project..."),
+  		    column(11,a(href="http://rpubs.com/datadancer/simpleTextPredictor",h4("Read me"))
+  		    )
+  		  )
       ),
       mainPanel(
         plotOutput('plot'),
         fluidRow(
           column(4,h4("Total number of predicted words"),
-                 textOutput("totNum")
+                 textOutput("totNum"),
+                 textOutput("include")
                  )
         ),
         br(),

@@ -1,6 +1,19 @@
+mostLikelyNWords <- function(N,stWd){
+  temp <- stWd
+  v <- c()
+  N<-min(N,5)
+  for(i in 1:N){
+    nw <- predictFromText(temp)
+    if(!isempty(nw$adNgrams)){
+      nw1 <- nw$uSAD[[sample(1:floor(length(nw$uSAD)/2),1)]]
+      v <- c(v,nw1)
+      temp <-paste(temp,nw1,collapse=" ")
+    } else { break}
+  }
+  paste(v,collapse=" ")
+}
 
 
-# work owith tokens
 predictor <- function(nds){
   function(text){
     candidates <- getCandidateNgrams(text,nds)
@@ -23,7 +36,12 @@ predictor <- function(nds){
   }
 }
 
-predictFromTextLarge <- predictor(NgramDocStats)
+
+#========================  Start =========================
+stopExists <- stopExistsMod("predict.R")
+stopExists("sNDS")
+
+#predictFromTextLarge <- predictor(NgramDocStats)
 predictFromTextSmall <- predictor(sNDS)
 
 predictFromTextd <- function(text){
@@ -33,20 +51,7 @@ predictFromTextd <- function(text){
 }
 
 
-mostLikelyNWords <- function(N,stWd){
-  temp <- stWd
-  v <- c()
-  N<-min(N,5)
-  for(i in 1:N){
-    nw <- predictFromText(temp)
-    if(!isempty(nw$adNgrams)){
-      nw1 <- nw$uSAD[[sample(1:floor(length(nw$uSAD)/2),1)]]
-      v <- c(v,nw1)
-      temp <-paste(temp,nw1,collapse=" ")
-    } else { break}
-  }
-  paste(v,collapse=" ")
-}
+
 
 
 plotTop <- function(inCand){
@@ -91,11 +96,11 @@ plotAll <- function(inCand){
 ## Tests ###
 
 # text <- "no frog gigantic"
-# inCand <- predictFromText(text)
+# inCand <- predictFromTextSmall(text)
 # 
 # plotAll(inCand$adNgrams)
-# #plotTop(inCand)
-# 
+#plotTop(inCand)
+
 # # # getCandidates returns:list of Ngrams)
 # texta <- "i.e., don't suggest anything to do with the fact that i am not sure what it meant to me. he"
 # 

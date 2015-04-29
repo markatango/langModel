@@ -1,4 +1,10 @@
+inOut <- function(testNgram){
+  pWords <- predictFromTextFold(testNgram$pref)$uSAD
+  lpw <- 
+    testNgram$suff %in%  pWords[1:min(3,length(pWords))]
+}
 
+#==========================  START ================================
 
 # remove existing corpus and ngram data and tokens to free up memory
 rm(dCorpus,Ngrams,NgramDocStats,tokens)

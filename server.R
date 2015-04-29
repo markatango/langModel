@@ -19,6 +19,8 @@ shinyServer(function(input, output) {
   
   include <- reactive({  sapply(1:lens(), function(i) { sum(is.na(s1()$tdl[[i]])*1)==0 })  })
   wordList <- reactive({s1()$tdl})
+
+  output$include <- reactive({include()})
   
   wordListLengths <- reactive({sapply(wordList(),length)})
   wordList <- reactive({s1()$tdl[include()]})
