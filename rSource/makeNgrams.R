@@ -60,7 +60,7 @@ for (i in 2:NMAX) {
 sNDS <-melt(sNDS,id=c("pref","suff","N","doc"),measure="count")
 sNDS <- dcast(sNDS,pref+suff+N~doc,sum)
 sNDS$total <- rowSums(sNDS[,c(as.character(1:nDocs))], na.rm=TRUE)
-sNDS <- sNDS[order(sNDS$pref, -sNDS$total),]
+sNDS <- sNDS[order(sNDS$pref,sNDS$N, -sNDS$total),]
 
 save(sNDS,file="shortNDS.RData")
 
